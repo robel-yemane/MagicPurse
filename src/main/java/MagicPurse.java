@@ -6,57 +6,155 @@ import java.util.regex.Pattern;
 
 public class MagicPurse {
 
-    public static void main(String[] args) {
-        System.out.println("Starting Magic Purse app...");
+  static int combinations =0;
 
-        if (args.length > 0) {
+  public static void main(String[] args) {
+    int amount=0;
 
-            String psd_pattern = "(\\d)+\\/(\\d+|-)\\/(\\d+|-)";
-            String sd_pattern = "^\\d+\\/[\\d+-]$";
-            String d_pattern = "^\\d+d$";
 
-            //regexes
-            // pound/shilling/denaris => (\d)+\/(\d+|-)\/(\d+|-) or \d+\/[\d+|-]\/[\d+|-]
-            //shilling/denaris    ~ ^\d+\/[\d+-]$
-            //denaris                 => ^\d+d$
+    if (args.length > 0) {
+      for (String arg :args) {
+         amount = getAmount(arg);
+        System.out.println("this is the amount to be calculated: " + amount);
+      }
 
-            for (String arg : args) {
-                int p, s = 0, d = 0;
-                // get £/s/d
-                if (Pattern.matches(psd_pattern, arg)) {
+    } else {
+      System.out.println("No arguments passed, Exiting.");
+      System.exit(1);
+    }
 
-                    String[] denoms = arg.split("/");
-                    p = Integer.parseInt(denoms[0]);
-                    if (!("-").equals(denoms[1]))
-                        s = Integer.parseInt(denoms[1]);
-                    if (!("-").equals(denoms[2])) {
-                        d = Integer.parseInt(denoms[2]);
-                    }
+    int[] denominations = {300, 240, 120, 60, 30, 10, 5}; // coin denominations
 
-                    System.out.format("You have £ = %d, Shillings = %d , denaris = %d%n ", p, s, d);
-                    // get s/d
-                } else if (Pattern.matches(sd_pattern, arg)) {
-                    String[] denoms = arg.split("/");
-                    s = Integer.parseInt(denoms[0]);
-                    if (!("-").equals(denoms[1])) {
-                        d = Integer.parseInt(denoms[1]);
-                    }
-                    System.out.format("You have Shillings = %d , denaris = %d%n ", s, d);
-                    // get d
-                } else if (Pattern.matches(d_pattern, arg)) {
-                    String str = arg.substring(0, arg.length() - 1);
-                    d = Integer.parseInt(str);
-                    System.out.format("You have denaris = %d%n ", d);
-                } else {
-                    System.out.println("Unexpected denomination: " + arg);
-                }
+    int[] count = new int[denominations.length];
+    //counter to keep track of each denomination for the amount in hand
 
-            }
+       // amount of money to be calculated
+    int startIndex = 0;
 
-        } else {
-            System.out.println("No arguments passed, Exiting.");
-            System.exit(1);
+    //   System.out.println("All possible coin combinations of " + MONEY + " are:");
+
+    PrintCombination(denominations, count, startIndex, amount);
+    //test case of 25 cents, and  notice default initiali
+    //start index =0
+    System.out.println("Combinations =  " + combinations);
+  }
+
+  public static int getAmount(String amount){
+
+    String psd_pattern = "(\\d)+\\/(\\d+|-)\\/(\\d+|-)";
+    String sd_pattern = "^\\d+\\/[\\d+-]$";
+    String d_pattern = "^\\d+d$";
+    int p, s , d ;
+    int tot = 0;
+
+    //regexes
+    // pound/shilling/denaris => (\d)+\/(\d+|-)\/(\d+|-) or \d+\/[\d+|-]\/[\d+|-]
+    //shilling/denaris    ~ ^\d+\/[\d+-]$
+    //denaris                 => ^\d+d$
+
+
+      // get £/s/d
+      if (Pattern.matches(psd_pattern, amount)) {
+
+        String[] denoms = amount.split("/");
+        p = Integer.parseInt(denoms[0]);
+        tot += p*240;
+        if (!("-").equals(denoms[1])) {
+          s = Integer.parseInt(denoms[1]);
+          tot += s*120;
+        }
+        if (!("-").equals(denoms[2])) {
+          d = Integer.parseInt(denoms[2]);
+          tot += d*10;
         }
 
+//        System.out.format("You have £ = %d, Shillings = %d , denaris = %d%n ", p, s, d);
+//        System.out.println("tot =" + tot);
+        // get s/d
+      } else if (Pattern.matches(sd_pattern, amount)) {
+        String[] denoms = amount.split("/");
+        s = Integer.parseInt(denoms[0]);
+        tot += s*120;
+        if (!("-").equals(denoms[1])) {
+          d = Integer.parseInt(denoms[1]);
+          tot += d*10;
+        }
+//        System.out.format("You have Shillings = %d , denaris = %d%n ", s, d);
+
+        // get d
+      } else if (Pattern.matches(d_pattern, amount)) {
+        String str = amount.substring(0, amount.length() - 1);
+        d = Integer.parseInt(str);
+        tot = d*10;
+//        System.out.format("You have denaris = %d%n ", d);
+//        System.out.println("tot =" + tot);
+      } else {
+//        System.out.println("Unexpected denomination: " + amount);
+        return -1;
+      }
+
+
+    return tot;
+  }
+
+  public static void PrintCombination(int[] denominations, int[] count,
+      int startIndex, int totalAmount) {
+
+    if (startIndex >= denominations.length) // we have processed all coins : //decide if we should proceed or not by tracking start index
+    {
+
+      for (int i = 0; i < denominations.length; i++)
+
+      {          // format the print out as  "amount=?*25 + ?*10..."
+        System.out.print("" + count[i] + "*" + denominations[i] + "+");
+      }
+
+      combinations++;
+      System.out.print("\n");
+      return;
     }
+
+    // otherwise we need to proceed
+    //but notice if startIndex is the last one, we need to check if it
+    // can be divided by the smallest coin
+    //if so, this is a good combination, otherwise this is not possible combo thus discard
+
+    if (startIndex == denominations.length - 1) { //i.e startIndex = 6
+
+
+      if (totalAmount % denominations[startIndex] == 0)
+      // if the amount is divisible by the smallest coin
+      {
+
+
+        count[startIndex] = totalAmount / denominations[startIndex];
+        //set the count of coins at the current index
+
+        //proceed to recursive call
+        //(when it's divisible recursive function is sent from HERE********///
+        PrintCombination(denominations, count, startIndex+1,
+            0); //notice startindex++ and remining amojunt =0
+
+      }
+
+
+    } else{ // we still have option to choose 0-N larger coins
+
+
+      //AFTER COMPLETING one full iteration and amount is divisible by denomination, why does it return here?????
+      int specialValue =  totalAmount/denominations[startIndex];
+      for (int i = 0; i <= specialValue; i++)
+      {
+
+        //for every cycle in a loop, we choose an arbitrary number of larger coins and proceed next
+        count[startIndex] = i;
+        int anotherSpecialValue = totalAmount - denominations[startIndex] * i;
+        PrintCombination(denominations, count, startIndex+1 ,anotherSpecialValue);
+        //notice we need to update the remaining amount
+
+      }
+
+    }
+
+  }
 }
