@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class MagicPurse {
 
-  static int combinations = 0;
+  static int numberOfWays = 0;
 
   public static void main(String[] args) {
     int amount = 0;
@@ -18,31 +18,33 @@ public class MagicPurse {
           System.out.println("Amount specified (" + amount + ") is not a valid "
               + "denomination. Please specify denomination in the following format:\n\"#/#/#\", \"#/#\" and \"#d\""
               + " or \"-\" for any blank value.\n");
+          System.exit(1);
         }
         System.out.println("this is the amount to be calculated: " + amount);
       }
 
     } else {
       System.out.println("No arguments passed, Exiting.");
-      System.exit(1);
     }
 
     int[] denominations = {300, 240, 120, 60, 30, 10, 5}; // coin denominations
 
-    int[] count = new int[denominations.length];
     //counter to keep track of each denomination for the amount in hand
+    int[] count = new int[denominations.length];
 
-    // amount of money to be calculated
     int startIndex = 0;
 
-    //   System.out.println("All possible coin combinations of " + MONEY + " are:");
-
-    PrintCombination(denominations, count, startIndex, amount);
-    //test case of 25 cents, and  notice default initiali
-    //start index =0
-    System.out.println("Combinations =  " + combinations);
+    getCombination(denominations, count, startIndex, amount);
+    System.out.println("Combinations =  " + numberOfWays);
   }
 
+
+  /**
+   * Get the amount of money from user input in pre-decimalisation notation to a single number.
+   *
+   * @param amount from user input. This is the amount of money to be calculated
+   * @return the number representation of the string input
+   */
   public static int getAmount(String amount) {
 
     String psd_pattern = "(\\d)+\\/(\\d+|-)\\/(\\d+|-)";
@@ -51,12 +53,10 @@ public class MagicPurse {
     int p, s, d;
     int tot = 0;
 
-    //regexes
     // pound/shilling/denaris => (\d)+\/(\d+|-)\/(\d+|-) or \d+\/[\d+|-]\/[\d+|-]
     //shilling/denaris    ~ ^\d+\/[\d+-]$
     //denaris                 => ^\d+d$
 
-    // get £/s/d
     if (Pattern.matches(psd_pattern, amount)) {
 
       String[] denoms = amount.split("/");
@@ -71,9 +71,6 @@ public class MagicPurse {
         tot += d * 10;
       }
 
-      //        System.out.format("You have £ = %d, Shillings = %d , denaris = %d%n ", p, s, d);
-      //        System.out.println("tot =" + tot);
-      // get s/d
     } else if (Pattern.matches(sd_pattern, amount)) {
       String[] denoms = amount.split("/");
       s = Integer.parseInt(denoms[0]);
@@ -82,9 +79,7 @@ public class MagicPurse {
         d = Integer.parseInt(denoms[1]);
         tot += d * 10;
       }
-      //        System.out.format("You have Shillings = %d , denaris = %d%n ", s, d);
 
-      // get d
     } else if (Pattern.matches(d_pattern, amount)) {
       String str = amount.substring(0, amount.length() - 1);
       d = Integer.parseInt(str);
@@ -98,7 +93,14 @@ public class MagicPurse {
     return tot;
   }
 
-  public static void PrintCombination(int[] denominations, int[] count, int startIndex,
+  /**
+   *
+   * @param denominations
+   * @param count
+   * @param startIndex
+   * @param totalAmount
+   */
+  public static void getCombination(int[] denominations, int[] count, int startIndex,
       int totalAmount) {
 
     if (startIndex
@@ -110,8 +112,15 @@ public class MagicPurse {
       {          // format the print out as  "amount=?*25 + ?*10..."
         System.out.print("" + count[i] + "*" + denominations[i] + "+");
       }
+      System.out.println();
 
-      combinations++;
+      int allDenominations = getAllDenominations(count);
+      System.out.println("Total Denominations qty: " + allDenominations);
+      if (allDenominations % 2 == 0) {
+
+        numberOfWays++;
+
+      }
       System.out.print("\n");
       return;
     }
@@ -132,7 +141,7 @@ public class MagicPurse {
 
         //proceed to recursive call
         //(when it's divisible recursive function is sent from HERE********///
-        PrintCombination(denominations, count, startIndex + 1,
+        getCombination(denominations, count, startIndex + 1,
             0); //notice startindex++ and remining amojunt =0
 
       }
@@ -147,12 +156,23 @@ public class MagicPurse {
         //for every cycle in a loop, we choose an arbitrary number of larger coins and proceed next
         count[startIndex] = i;
         int anotherSpecialValue = totalAmount - denominations[startIndex] * i;
-        PrintCombination(denominations, count, startIndex + 1, anotherSpecialValue);
+        getCombination(denominations, count, startIndex + 1, anotherSpecialValue);
         //notice we need to update the remaining amount
 
       }
 
     }
 
+  }
+
+  static int getAllDenominations(int[] combArray) {
+    int sumOfAllDenominations = 0;
+
+    for (int i : combArray
+        ) {
+      sumOfAllDenominations += i;
+
+    }
+    return sumOfAllDenominations;
   }
 }
